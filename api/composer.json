@@ -1,0 +1,8 @@
+{
+  "name": "codbarber/api",
+  "description": "API REST CodBarber para app móvil",
+  "type": "project",
+  "require": {
+    "php": ">=8.0"
+  }
+}
