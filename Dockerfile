@@ -5,13 +5,14 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo pdo_pgsql pgsql
 
-# Habilitar mod_rewrite
+# Habilitar mod_rewrite y mod_headers
 RUN a2enmod rewrite
+RUN a2enmod headers
 
 # Copiar SOLO el contenido de /api al document root
 COPY api/ /var/www/html/
 
-# Permitir .htaccess (CORREGIDO)
+# Permitir .htaccess
 RUN echo "<Directory /var/www/html/>" >> /etc/apache2/apache2.conf && \
     echo "    AllowOverride All" >> /etc/apache2/apache2.conf && \
     echo "</Directory>" >> /etc/apache2/apache2.conf
