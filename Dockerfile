@@ -11,10 +11,10 @@ RUN a2enmod rewrite
 # Copiar SOLO el contenido de /api al document root
 COPY api/ /var/www/html/
 
-# Permitir .htaccess
-RUN echo "<Directory /var/www/html/> \
-    AllowOverride All \
-</Directory>" >> /etc/apache2/apache2.conf
+# Permitir .htaccess (CORREGIDO)
+RUN echo "<Directory /var/www/html/>" >> /etc/apache2/apache2.conf && \
+    echo "    AllowOverride All" >> /etc/apache2/apache2.conf && \
+    echo "</Directory>" >> /etc/apache2/apache2.conf
 
 # Instalar Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -22,7 +22,5 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Permisos
 RUN chown -R www-data:www-data /var/www/html
 
-# Puerto
 EXPOSE 80
-
 CMD ["apache2-foreground"]
