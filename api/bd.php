@@ -1,25 +1,13 @@
 <?php
 
-// Detectar si estamos en Render (producción)
-if (getenv("RENDER")) {
+// PRODUCCIÓN RENDER — MISMA BD QUE TU WEB
+$host = "dpg-d4idlvf5r7bs73eg0h2g-a.oregon-postgres.render.com";
+$port = "5432";
+$dbname = "codbarber";
+$user = "codbarber";
+$password = "BNQhm48yvi0w6WzWuahl9H7e0tHJDVWh";
 
-    // Variables estándar de Render PostgreSQL
-    $host = getenv("PGHOST");
-    $port = getenv("PGPORT");
-    $db   = getenv("PGDATABASE");
-    $user = getenv("PGUSER");
-    $pass = getenv("PGPASSWORD");
-
-    // Conexión en Render
-    $conexion = pg_connect("host=$host port=$port dbname=$db user=$user password=$pass");
-
-} else {
-
-    // -------------------------------------------
-    // MODO LOCAL (XAMPP o Docker local)
-    // -------------------------------------------
-    $conexion = pg_connect("host=localhost port=5432 dbname=codbarber user=postgres password=msh79000");
-}
+$conexion = pg_connect("host=$host port=$port dbname=$dbname user=$user password=$password sslmode=require");
 
 // Verificar conexión
 if (!$conexion) {
