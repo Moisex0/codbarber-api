@@ -1,10 +1,30 @@
 <?php
 
+// ============================
+//        CORS PARA RENDER
+// ============================
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Accept");
+header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Max-Age: 86400");
+
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    http_response_code(200);
+    exit();
+}
+
+// ============================
+//  CONTENIDO REAL DEL SCRIPT
+// ============================
 header("Content-Type: application/json; charset=utf-8");
 require_once(__DIR__ . "/bd.php");
 
 // Recibir JSON
-$data = json_decode(file_get_contents("php://input"), true);
+$raw = file_get_contents("php://input");
+$data = json_decode($raw, true);
+
+// Debug opcional:
+// file_put_contents("debug_register.txt", $raw);
 
 // Validar estructura JSON
 if (!is_array($data)) {
@@ -21,7 +41,7 @@ $telefono   = trim($data["telefono"] ?? "");
 $correo     = trim($data["correo"] ?? "");
 $contrasena = trim($data["contrasena"] ?? "");
 
-// Validar
+// Validar obligatorios
 if ($nombre === "" || $correo === "" || $contrasena === "") {
     echo json_encode([
         "success" => false,
@@ -30,7 +50,7 @@ if ($nombre === "" || $correo === "" || $contrasena === "") {
     exit();
 }
 
-// Validar formato de correo
+// Validar correo
 if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
     echo json_encode([
         "success" => false,
@@ -39,14 +59,13 @@ if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
     exit();
 }
 
-// Buscar si existe el correo
+// Buscar si ya existe
 $existe = seleccionar(
     "SELECT id_cliente FROM cliente WHERE correo = $1 LIMIT 1",
     [$correo]
 );
 
-// Si existe → detener registro
-if ($existe && count($existe) > 0) {
+if ($existe) {
     echo json_encode([
         "success" => false,
         "message" => "El correo ya está registrado"
@@ -64,7 +83,6 @@ $sql = "INSERT INTO cliente (nombre, telefono, correo, contrasena)
 
 $insert = seleccionar($sql, [$nombre, $telefono, $correo, $hash]);
 
-// Validación
 if (!$insert || !isset($insert[0]["id_cliente"])) {
     echo json_encode([
         "success" => false,
