@@ -1,13 +1,12 @@
 <?php
 
-// Indicamos que la respuesta será JSON :)
 header("Content-Type: application/json; charset=utf-8");
 
-// Leer JSON crudo (Render a veces lo manda vacío si no viene bien)
+// Leer JSON de entrada
 $raw = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
-// Si viene vacío → evitar warnings
+// Validar JSON recibido
 if (!is_array($data)) {
     echo json_encode([
         "success" => false,
@@ -16,14 +15,13 @@ if (!is_array($data)) {
     exit();
 }
 
-// Conexión a la base de datos :)
 require_once(__DIR__ . "/bd.php");
 
-// Extraigo valores con validación básica :)
-$correo      = trim($data["correo"] ?? "");
-$contrasena  = $data["contrasena"] ?? "";
+// Sanitizar datos
+$correo     = trim($data["correo"] ?? "");
+$contrasena = trim($data["contrasena"] ?? "");
 
-// Si falta correo o contraseña → error :)
+// Validar campos
 if ($correo === "" || $contrasena === "") {
     echo json_encode([
         "success" => false,
@@ -32,11 +30,28 @@ if ($correo === "" || $contrasena === "") {
     exit();
 }
 
-// Busco al cliente por correo :)
+// Validar formato de correo
+if (!filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Correo inválido"
+    ]);
+    exit();
+}
+
+// Buscar usuario
 $res = seleccionar("SELECT * FROM cliente WHERE correo = $1 LIMIT 1", [$correo]);
 
-// Si no existe → correo incorrecto :)
-if (!$res) {
+// Si hubo error en BD
+if ($res === false) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error al consultar la base de datos"
+    ]);
+    exit();
+}
+
+if (empty($res)) {
     echo json_encode([
         "success" => false,
         "message" => "Correo incorrecto"
@@ -44,9 +59,9 @@ if (!$res) {
     exit();
 }
 
-$user = $res[0]; // Cliente encontrado :)
+$user = $res[0];
 
-// Validar que la columna contrasena exista (por seguridad)
+// Validar existencia de contraseña
 if (!isset($user["contrasena"])) {
     echo json_encode([
         "success" => false,
@@ -55,7 +70,7 @@ if (!isset($user["contrasena"])) {
     exit();
 }
 
-// Comparo contraseña usando password_verify :)
+// Validar contraseña
 if (!password_verify($contrasena, $user["contrasena"])) {
     echo json_encode([
         "success" => false,
@@ -64,16 +79,16 @@ if (!password_verify($contrasena, $user["contrasena"])) {
     exit();
 }
 
-// Login correcto :)
+// Login exitoso
 echo json_encode([
     "success" => true,
     "message" => "Login correcto",
     "cliente" => [
-        "id_cliente" => $user["id_cliente"],
+        "id_cliente" => intval($user["id_cliente"]),
         "nombre"     => $user["nombre"],
         "telefono"   => $user["telefono"],
-        "correo"     => $user["correo"],
+        "correo"     => $user["correo"]
     ]
-]);
+], JSON_UNESCAPED_UNICODE);
 
 ?>

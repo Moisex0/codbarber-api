@@ -2,21 +2,22 @@
 
 header("Content-Type: application/json; charset=utf-8");
 
-// Cargar bd.php desde la misma carpeta /api :)
+// Cargar BD
 require_once(__DIR__ . "/bd.php");
 
-// Validar parámetro :)
-$id = $_GET["id_barberia"] ?? null;
+// Obtener id_barberia y convertirlo a entero
+$id_barberia = isset($_GET["id_barberia"]) ? intval($_GET["id_barberia"]) : 0;
 
-if (!$id) {
+// Validación
+if ($id_barberia <= 0) {
     echo json_encode([
         "success" => false,
-        "message" => "Falta id_barberia"
+        "message" => "id_barberia inválido o faltante"
     ]);
     exit();
 }
 
-// Consulta de barberos :)
+// Consultar barberos
 $rows = seleccionar("
     SELECT 
         id_barbero,
@@ -25,9 +26,9 @@ $rows = seleccionar("
         correo
     FROM barbero
     WHERE id_barberia = $1
-", [$id]);
+", [$id_barberia]);
 
-// Validación por si falla :)
+// Detectar error real en la consulta
 if ($rows === false) {
     echo json_encode([
         "success" => false,
@@ -36,10 +37,10 @@ if ($rows === false) {
     exit();
 }
 
-// Respuesta JSON :)
+// Respuesta correcta SIEMPRE con array
 echo json_encode([
     "success" => true,
-    "barberos" => $rows
-]);
+    "barberos" => $rows ?: []
+], JSON_UNESCAPED_UNICODE);
 
 ?>

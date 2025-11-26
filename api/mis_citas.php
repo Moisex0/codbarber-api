@@ -1,24 +1,20 @@
 <?php
 
-// Indicamos que la respuesta será JSON :)
 header("Content-Type: application/json; charset=utf-8");
-
-// Conexión a BD :)
 require_once(__DIR__ . "/bd.php");
 
-// Obtener ID del cliente :)
-$id = $_GET["id_cliente"] ?? null;
+// Obtener y validar id_cliente
+$id = isset($_GET["id_cliente"]) ? intval($_GET["id_cliente"]) : 0;
 
-// Validación de parámetro obligatorio :)
-if (!$id) {
+if ($id <= 0) {
     echo json_encode([
         "success" => false,
-        "message" => "Falta id_cliente"
+        "message" => "id_cliente inválido o faltante"
     ]);
     exit();
 }
 
-// Consultar citas del cliente :)
+// Ejecutar la consulta
 $rows = seleccionar("
     SELECT 
         c.id_cita,
@@ -33,10 +29,19 @@ $rows = seleccionar("
     ORDER BY c.fecha DESC, c.hora DESC
 ", [$id]);
 
-// Si no hay citas, respondemos lista vacía (pero exitoso) :)
+// Validar si hubo ERROR en la consulta
+if ($rows === false) {
+    echo json_encode([
+        "success" => false,
+        "message" => "Error al consultar citas"
+    ]);
+    exit();
+}
+
+// Respuesta exitosa (aunque la lista esté vacía)
 echo json_encode([
     "success" => true,
-    "citas" => $rows ?: []   // Nunca enviamos NULL :)
+    "citas" => $rows ?: []
 ], JSON_UNESCAPED_UNICODE);
 
 ?>
