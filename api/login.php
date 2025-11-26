@@ -5,7 +5,6 @@ header("Content-Type: application/json; charset=utf-8");
 
 // Leer JSON crudo (Render a veces lo manda vacío si no viene bien)
 $raw = file_get_contents("php://input");
-echo $raw;
 $data = json_decode($raw, true);
 
 // Si viene vacío → evitar warnings
